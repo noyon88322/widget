@@ -138,7 +138,7 @@
 ```
 
 #Make Class(MyWidgetProvider)
-``bash
+```bash
 
 package com.example.calander;
 
@@ -177,8 +177,70 @@ public class MyWidgetProvider extends AppWidgetProvider {
 
 ```
 
-#create class2()
+#create class2(WidgetUpdateService)
 ```bash
+
+package com.example.calander;
+
+import android.content.Context;
+import android.content.Intent;
+import androidx.core.app.JobIntentService;
+
+public class WidgetUpdateService extends JobIntentService {
+
+    static final int JOB_ID = 1010;
+
+    public static void enqueueWork(Context context, Intent work) {
+        enqueueWork(context, WidgetUpdateService.class, JOB_ID, work);
+    }
+
+    @Override
+    protected void onHandleWork(Intent intent) {
+        String text = intent.getStringExtra("newText");
+        String engdate = intent.getStringExtra("engdate");
+        if (text != null && !text.isEmpty()) {
+            MyWidgetProvider.updateWidgetText(getApplicationContext(), text,engdate);
+        }
+    }
+}
+
+
 
 ```
 
+#Fragment or Activity
+```bash
+
+
+    private void updateWidgetFromFragment(String text,String engDate) {
+        Intent intent = new Intent(requireContext(), WidgetUpdateService.class);
+        intent.putExtra("newText", text); // যা লিখতে চান
+        intent.putExtra("engdate", engDate); // যা লিখতে চান
+        WidgetUpdateService.enqueueWork(requireContext(), intent);
+    }
+
+```
+
+#Maifest
+```bash
+
+
+
+        <receiver android:name=".MyWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info" />
+        </receiver>
+
+        <service
+            android:name=".WidgetUpdateService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
+
+
+```
